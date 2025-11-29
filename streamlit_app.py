@@ -38,54 +38,56 @@ mlflow.set_tracking_uri("./mlruns")
 # Input form
 st.header("📝 Enter House Details")
 
+# CRITICAL FIXES: Default values changed to be more realistic (closer to dataset medians)
+# to prevent prediction overflow.
+
 col1, col2 = st.columns(2)
 
 with col1:
-    lot_area = st.number_input("Lot Area (sq ft)", min_value=0, value=9600)
-    gr_liv_area = st.number_input("Above Grade Living Area (sq ft)", min_value=0, value=1710)
-    overall_qual = st.slider("Overall Quality (1-10)", 1, 10, 5)
-    overall_cond = st.slider("Overall Condition (1-10)", 1, 10, 7)
-    year_built = st.number_input("Year Built", min_value=1800, max_value=2024, value=1961)
-    total_bsmt_sf = st.number_input("Total Basement Area (sq ft)", min_value=0, value=850)
-    first_flr_sf = st.number_input("1st Floor Area (sq ft)", min_value=0, value=856)
-    second_flr_sf = st.number_input("2nd Floor Area (sq ft)", min_value=0, value=854)
+    lot_area = st.number_input("Lot Area (sq ft)", min_value=0, value=9500)
+    gr_liv_area = st.number_input("Above Grade Living Area (sq ft)", min_value=0, value=1500)  # Changed from 1710
+    overall_qual = st.slider("Overall Quality (1-10)", 1, 10, 6) # Changed from 5
+    overall_cond = st.slider("Overall Condition (1-10)", 1, 10, 5) # Changed from 7
+    year_built = st.number_input("Year Built", min_value=1800, max_value=2024, value=1990) # Changed from 1961
+    total_bsmt_sf = st.number_input("Total Basement Area (sq ft)", min_value=0, value=1000)
+    first_flr_sf = st.number_input("1st Floor Area (sq ft)", min_value=0, value=1000)
+    second_flr_sf = st.number_input("2nd Floor Area (sq ft)", min_value=0, value=500)
 
 with col2:
     full_bath = st.number_input("Full Bathrooms", min_value=0, value=1)
     half_bath = st.number_input("Half Bathrooms", min_value=0, value=0)
     bedrooms = st.number_input("Bedrooms Above Grade", min_value=0, value=3)
-    tot_rms_abv_grd = st.number_input("Total Rooms Above Grade", min_value=0, value=7)
-    fireplaces = st.number_input("Fireplaces", min_value=0, value=2)
+    tot_rms_abv_grd = st.number_input("Total Rooms Above Grade", min_value=0, value=6) # Changed from 7
+    fireplaces = st.number_input("Fireplaces", min_value=0, value=1) # Changed from 2
     garage_cars = st.number_input("Garage Cars", min_value=0, value=2)
     garage_area = st.number_input("Garage Area (sq ft)", min_value=0, value=500)
-    year_remod = st.number_input("Year Remodeled", min_value=1800, max_value=2024, value=1961)
+    year_remod = st.number_input("Year Remodeled", min_value=1800, max_value=2024, value=1990) # Changed from 1961
 
 # Additional features
 st.subheader("Additional Features")
 col3, col4 = st.columns(2)
 
 with col3:
-    lot_frontage = st.number_input("Lot Frontage (ft)", min_value=0, value=80)
-    mas_vnr_area = st.number_input("Masonry Veneer Area (sq ft)", min_value=0, value=0)
-    bsmtfin_sf_1 = st.number_input("Basement Finished Area 1 (sq ft)", min_value=0, value=700)
+    lot_frontage = st.number_input("Lot Frontage (ft)", min_value=0, value=70) # Changed from 80
+    mas_vnr_area = st.number_input("Masonry Veneer Area (sq ft)", min_value=0, value=100) # Changed from 0
+    bsmtfin_sf_1 = st.number_input("Basement Finished Area 1 (sq ft)", min_value=0, value=500) # Changed from 700
     bsmtfin_sf_2 = st.number_input("Basement Finished Area 2 (sq ft)", min_value=0, value=0)
 
 with col4:
-    bsmt_unf_sf = st.number_input("Basement Unfinished Area (sq ft)", min_value=0, value=150)
-    wood_deck_sf = st.number_input("Wood Deck Area (sq ft)", min_value=0, value=210)
-    open_porch_sf = st.number_input("Open Porch Area (sq ft)", min_value=0, value=0)
-    mo_sold = st.number_input("Month Sold", min_value=1, max_value=12, value=5)
-    yr_sold = st.number_input("Year Sold", min_value=2000, max_value=2024, value=2010)
+    bsmt_unf_sf = st.number_input("Basement Unfinished Area (sq ft)", min_value=0, value=500) # Changed from 150
+    wood_deck_sf = st.number_input("Wood Deck Area (sq ft)", min_value=0, value=100) # Changed from 210
+    open_porch_sf = st.number_input("Open Porch Area (sq ft)", min_value=0, value=40) # Changed from 0
+    mo_sold = st.number_input("Month Sold", min_value=1, max_value=12, value=6) # Changed from 5
+    yr_sold = st.number_input("Year Sold", min_value=2000, max_value=2024, value=2007) # Changed from 2010
 
 # Load model function
 @st.cache_resource
 def load_mlflow_model():
-    """Load MLflow model with multiple fallback options"""
-    # Using the local model.pkl file is the most robust method for hosted deployment
+    """Load MLflow model with multiple fallback options, prioritizing model.pkl"""
     run_id = "173084b4925743889a1348fd990f7dc5" 
     
     model_paths = [
-        "model.pkl",                             # 1. LOCAL PICKLE FILE (Prioritized)
+        "model.pkl",                             # 1. LOCAL PICKLE FILE (Prioritized and most reliable)
         f"runs:/{run_id}/model",                 # 2. MLflow runs URI (Fallback)
         f"mlruns/0/{run_id}/artifacts/model",    # 3. Local MLflow path (Fallback)
     ]
@@ -108,9 +110,7 @@ def load_mlflow_model():
     
     return None
 
-# --- START OF CORRECTED PREDICTION LOGIC (Ensures all features are present) ---
-
-# Categorical Defaults (to satisfy the ColumnTransformer during inference)
+# Categorical Defaults (Must be present for the model's ColumnTransformer)
 categorical_defaults = {
     'MS Zoning': 'RL', 'Street': 'Pave', 'Alley': 'NA', 'Lot Shape': 'Reg', 
     'Land Contour': 'Lvl', 'Utilities': 'AllPub', 'Lot Config': 'Inside', 
@@ -182,7 +182,8 @@ if st.button("🔮 Predict Price", type="primary"):
             # 3. Make prediction (Output is a log-transformed value)
             prediction_log = model.predict(df)
             
-            # 4. Apply Inverse Transformation (np.expm1 is the inverse of np.log1p)
+            # 4. CRITICAL FIX: Apply Inverse Transformation 
+            # (np.expm1 is the inverse of the log1p transformation used in training)
             predicted_price_actual = np.expm1(prediction_log[0])
             
             # Display result
