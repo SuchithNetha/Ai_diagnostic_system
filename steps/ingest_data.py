@@ -1,59 +1,21 @@
-import os
+import logging
 import pandas as pd
-import zipfile
 from zenml import step
+import zipfile
 
-try:
-    from zenml import step
-    USE_ZENML = True
-except ImportError:
-    USE_ZENML = False
+class DataIngestor:
+    def __init__(self, import_path: str):
+        self.import_path = import_path
 
-
-def load_csv(file_path: str) -> pd.DataFrame:
-    """Load a single CSV file."""
-    df = pd.read_csv(file_path)
-    df.dropna(inplace=True)
-    print(f"[OK] Loaded CSV: {file_path}, shape={df.shape}")
-    return df
-
-
-def load_zip(file_path: str) -> pd.DataFrame:
-    """Extract a zip file containing exactly one CSV & load it."""
-    with zipfile.ZipFile(file_path, 'r') as zip_ref:
-        zip_ref.extractall("data/extracted/")  # extract to folder
-
-    # find the extracted CSV
-    extracted_files = [
-        f for f in os.listdir("data/extracted/") if f.endswith(".csv")
-    ]
-
-    if not extracted_files:
-        raise FileNotFoundError("No CSV found inside ZIP!")
-
-    csv_path = os.path.join("data/extracted", extracted_files[0])
-    print(f"[OK] Extracted {csv_path}")
-
-    return load_csv(csv_path)
-
+    def get_data(self):
+        logging.info(f"Ingesting data from {self.import_path}")
+        with zipfile.ZipFile(self.import_path, 'r') as zip_ref:
+            # This unzips and reads your medical_diagnosis.csv
+            zip_ref.extractall("extracted_data")
+        return pd.read_csv("extracted_data/medical_diagnosis.csv")
 
 @step
-def data_ingestion_step(file_path: str) -> pd.DataFrame:
-    """Loads CSV or ZIP medical datasets."""
-    ext = os.path.splitext(file_path)[1].lower()
-
-    if ext == ".csv":
-        return load_csv(file_path)
-
-    elif ext == ".zip":
-        return load_zip(file_path)
-
-    else:
-        raise ValueError(f"Unsupported file type: {ext}")
-
-
-if __name__ == "__main__":
-    # TEST both types
-    #data_ingestion_step("data/medical_data.csv")
-   df= data_ingestion_step("data/medical_data.zip")
-   ptint(df.head())
+def ingest_data(loader_path: str) -> pd.DataFrame:
+    ingestor = DataIngestor(loader_path)
+    df = ingestor.get_data()
+    return df
