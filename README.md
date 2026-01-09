@@ -1,280 +1,215 @@
-# 🏠 House Price Predictor - ML Pipeline Project
+# 🏥 AI Medical Diagnosis System
 
-A production-grade Machine Learning pipeline for predicting housing prices using the Ames Housing dataset. Built with **ZenML**, **MLflow**, and **Scikit-learn**, implementing design patterns for maintainability and extensibility.
+A production-grade Machine Learning pipeline designed to assist in preliminary medical diagnosis based on patient symptoms. Built with **ZenML**, **MLflow**, **Streamlit**, and **Scikit-learn**, this project demonstrates how to build robust, scalable, and deployable ML systems for healthcare applications.
+
+> [!WARNING]
+> **Disclaimer**: This tool is for **educational and research purposes only**. It is **not** a substitute for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider for medical concerns.
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-![ZenML](https://img.shields.io/badge/ZenML-0.64.0-orange.svg)
-![MLflow](https://img.shields.io/badge/MLflow-2.15.1-blue.svg)
+![ZenML](https://img.shields.io/badge/ZenML-MLOps-orange.svg)
+![MLflow](https://img.shields.io/badge/MLflow-Tracking-blue.svg)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-
-## 📋 Table of Contents
-
-- [Features](#-features)
-- [Architecture](#-architecture)
-- [Project Structure](#-project-structure)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Design Patterns](#-design-patterns)
-- [Results](#-results)
-- [Documentation](#-documentation)
-- [Contributing](#-contributing)
-- [License](#-license)
-
-## ✨ Features
-
-- ✅ **Complete ML Pipeline**: End-to-end pipeline from data ingestion to model deployment
-- ✅ **Design Patterns**: Factory, Strategy, and Template patterns for extensibility
-- ✅ **Experiment Tracking**: MLflow integration for tracking experiments and models
-- ✅ **Model Deployment**: REST API service for predictions
-- ✅ **Modular Architecture**: Easy to extend and modify
-- ✅ **Production-Ready**: Follows MLOps best practices
-
-## 🏗️ Architecture
-
-The project implements a modular architecture using design patterns:
-
-### Design Patterns Used
-
-1. **Factory Pattern** - Data ingestion based on file type
-2. **Strategy Pattern** - Flexible strategies for data processing
-3. **Template Pattern** - Consistent pipeline step structure
-
-### Pipeline Flow
-
-```
-Data Ingestion → Missing Values → Feature Engineering → Outlier Detection 
-    → Data Splitting → Model Training → Model Evaluation → Deployment
-```
-
-## 📁 Project Structure
-
-```
-prices-predictor-system/
-├── README.md                 # This file
-├── requirements.txt          # Python dependencies
-├── config.yaml              # ZenML configuration
-│
-├── run_pipeline.py          # Training pipeline entry point
-├── run_deployment.py        # Deployment pipeline entry point
-├── sample_predict.py        # Example prediction script
-│
-├── pipelines/               # Pipeline definitions
-│   ├── training_pipeline.py
-│   └── deployment_pipeline.py
-│
-├── steps/                   # ZenML pipeline steps
-│   ├── data_ingestion_step.py
-│   ├── handle_missing_values_step.py
-│   ├── feature_engineering_step.py
-│   ├── outlier_detection_step.py
-│   ├── data_splitter_step.py
-│   ├── model_building_step.py
-│   ├── model_evaluator_step.py
-│   └── ...
-│
-├── src/                     # Core business logic
-│   ├── ingest_data.py       # Factory pattern
-│   ├── handle_missing_values.py
-│   ├── feature_engineering.py
-│   ├── outlier_detection.py
-│   ├── data_splitter.py
-│   ├── model_building.py
-│   └── model_evaluator.py
-│
-├── data/                    # Raw data
-│   └── archive.zip          # Ames Housing dataset
-│
-├── analysis/                # Exploratory Data Analysis
-│   └── EDA.ipynb
-│
-└── explanations/            # Design pattern examples
-    ├── factory_design_patter.py
-    ├── strategy_design_pattern.py
-    └── template_design_pattern.py
-```
-
-## 🚀 Installation
-
-### Prerequisites
-
-- Python 3.8 or higher
-- pip package manager
-
-### Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/prices-predictor-system.git
-   cd prices-predictor-system
-   ```
-
-2. **Create a virtual environment** (recommended)
-   ```bash
-   python -m venv venv
-   
-   # On Windows
-   venv\Scripts\activate
-   
-   # On macOS/Linux
-   source venv/bin/activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Initialize ZenML** (if not already done)
-   ```bash
-   zenml init
-   ```
-
-5. **Set up ZenML stack with MLflow**
-   ```bash
-   # Create MLflow tracker
-   zenml experiment-tracker register mlflow_tracker --flavor=mlflow
-   
-   # Create MLflow model deployer
-   zenml model-deployer register mlflow --flavor=mlflow
-   
-   # Create and activate stack
-   zenml stack register local-mlflow-stack \
-       -a default \
-       -o default \
-       -e mlflow_tracker \
-       -d mlflow
-   
-   zenml stack set local-mlflow-stack
-   ```
-
-## 💻 Usage
-
-### 1. Training the Model
-
-Run the training pipeline:
-
-```bash
-python run_pipeline.py
-```
-
-This will:
-- Ingest and process the data
-- Train the model
-- Evaluate performance
-- Save the model to MLflow
-
-### 2. View MLflow UI
-
-After training, view experiment results:
-
-```bash
-mlflow ui --backend-store-uri ./mlruns
-```
-
-Open `http://localhost:5000` in your browser.
-
-### 3. Deployment (Linux/macOS)
-
-Deploy the model as a REST API:
-
-```bash
-python run_deployment.py
-```
-
-**Note**: Automatic deployment has limitations on Windows. See [Troubleshooting](#-troubleshooting).
-
-### 4. Make Predictions
-
-#### Using the sample script:
-```bash
-python sample_predict.py
-```
-
-#### Using HTTP request:
-```bash
-curl -X POST http://127.0.0.1:8000/invocations \
-  -H "Content-Type: application/json" \
-  -d @sample_data.json
-```
-
-## 🎨 Design Patterns
-
-### Factory Pattern
-Creates appropriate data ingestor based on file type (ZIP, CSV, JSON, etc.)
-
-### Strategy Pattern
-Allows switching between different strategies for:
-- Missing value handling (drop, fill with mean/median/mode)
-- Feature engineering (log transform, scaling, encoding)
-- Outlier detection (Z-score, IQR)
-- Model evaluation
-
-### Template Pattern
-Ensures consistent structure across all pipeline steps
-
-## 📊 Results
-
-The model achieves:
-- **R² Score**: ~0.58 (58% variance explained)
-- **MSE**: Tracked in MLflow
-- **Model**: Linear Regression with preprocessing pipeline
-
-View detailed metrics in the MLflow UI.
-
-## 📚 Documentation
-
-- [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) - Complete project analysis
-- [INTERVIEW_QA.md](INTERVIEW_QA.md) - Interview questions and answers
-- [explanations/](explanations/) - Design pattern examples
-
-## 🔧 Troubleshooting
-
-### Windows Deployment Issue
-
-If you encounter daemon-related errors on Windows:
-
-1. **Manual Model Serving**:
-   ```bash
-   # Get the latest run ID from MLflow
-   mlflow models serve -m runs:/<run_id>/model -p 8000 --host 127.0.0.1
-   ```
-
-2. **Alternative**: Use WSL (Windows Subsystem for Linux) for full daemon support
-
-### Common Issues
-
-- **ZenML stack not found**: Run `zenml stack set local-mlflow-stack`
-- **Port 8000 already in use**: Change port in deployment config
-- **Missing data**: Ensure `data/archive.zip` exists
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Ames Housing Dataset
-- ZenML team for the amazing MLOps framework
-- MLflow for experiment tracking
-- Scikit-learn for ML algorithms
-
-## 📧 Contact
-
-Your Name - [your.email@example.com](mailto:your.email@example.com)
-
-Project Link: [https://github.com/yourusername/prices-predictor-system](https://github.com/yourusername/prices-predictor-system)
 
 ---
 
-⭐ If you found this project helpful, please give it a star!
+## 📋 Table of Contents
 
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Architecture](#-architecture)
+- [Project Structure](#-project-structure)
+- [Installation Guide](#-installation-guide)
+- [Usage Instructions](#-usage-instructions)
+- [Technical Details](#-technical-details)
+- [Troubleshooting](#-troubleshooting)
+
+---
+
+## 🔭 Overview
+
+This project implements an End-to-End Machine Learning pipeline that:
+1.  **Ingests** medical data (symptoms descriptions).
+2.  **Cleans and Preprocesses** the data for machine learning.
+3.  **Trains** a Random Forest Classifier to map symptoms to diseases.
+4.  **Evaluates** the model's accuracy.
+5.  **Deploys** a user-friendly Web Interface using Streamlit for real-time predictions.
+
+It is designed to be easily extensible, allowing data scientists to swap out models, data sources, or preprocessing steps without rewriting the entire codebase.
+
+---
+
+## ✨ Key Features
+
+- **Automated Pipeline**: A fully automated workflow using ZenML to manage data, training, and evaluation steps.
+- **Experiment Tracking**: Integrated with **MLflow** to track model metrics, parameters, and artifacts.
+- **Interactive UI**: A built-in **Streamlit** application allows users to select symptoms and get instant predictions.
+- **Robust Engineering**: Uses software design patterns (Factory, Strategy, Template) for clean, maintainable code.
+- **Scalable**: Ready for deployment in cloud environments.
+
+---
+
+## 🏗️ Architecture
+
+The system follows a modular MLOps architecture:
+
+```mermaid
+graph LR
+    A[Data Ingestion] --> B[Data Cleaning]
+    B --> C[Model Training]
+    C --> D[Model Evaluation]
+    D --> E[Model Registry]
+    E --> F[Streamlit App]
+```
+
+1.  **Ingestion**: Reads raw data from `data/medical_data.zip`.
+2.  **Cleaning**: Handles missing values and outliers.
+3.  **Training**: Uses a **Random Forest Classifier** (`src/model_dev.py`).
+4.  **Evaluation**: Calculates accuracy and logs metrics to MLflow.
+5.  **Serving**: The Streamlit app loads the latest trained model from the artifact store to make predictions.
+
+---
+
+## 📁 Project Structure
+
+Here is a roadmap of the repository to help you navigate:
+
+```
+prices-predictor-system/        # (Root directory)
+├── README.md                   # You are here!
+├── run_pipeline.py             # Script to trigger the Training Pipeline
+├── streamlit_app.py            # The Medical Diagnosis Web Application
+├── requirements.txt            # Python dependencies
+├── config.yaml                 # Configuration settings
+│
+├── pipelines/                  # ZenML Pipeline definitions
+│   └── training_pipeline.py    # Orchestrates ingestion -> training -> eval
+│
+├── steps/                      # Individual steps of the pipeline
+│   ├── clean_data.py           # Preprocessing logic
+│   ├── model_train.py          # Training logic
+│   └── evaluation.py           # Model assessment
+│
+├── src/                        # Core Logic & Classes
+│   ├── model_dev.py            # Model definitions (RandomForest)
+│   └── ...
+│
+└── data/                       # Dataset storage
+    └── medical_data.zip        # Raw medical dataset
+```
+
+---
+
+## 🚀 Installation Guide
+
+Follow these steps to set up the project on your local machine.
+
+### Prerequisites
+- **Python 3.8** or higher installed.
+- **Git** installed.
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/your-username/medical-diagnosis-system.git
+cd prices-predictor-system
+```
+
+### Step 2: Create a Virtual Environment
+It's best practice to isolate your dependencies.
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### Step 3: Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### Step 4: Initialize ZenML
+```bash
+zenml init
+```
+
+---
+
+## 💻 Usage Instructions
+
+### 1. Train the Brain (Run the Pipeline)
+Before you can use the app, you need to train the AI model.
+```bash
+python run_pipeline.py
+```
+**What happens?**
+- The script initializes the `training_pipeline`.
+- It processes the data in `data/medical_data.zip`.
+- It trains a new model and saves it.
+- Check the terminal output for success messages!
+
+### 2. Launch the Web App
+Interact with the trained model using the dashboard.
+```bash
+streamlit run streamlit_app.py
+```
+- A browser window will open (usually `http://localhost:8501`).
+- **Instructions**:
+    1.  Select symptoms from the sidebar/main menu (e.g., Fever, Cough).
+    2.  Click **"Analyze Symptoms"**.
+    3.  See the predicted diagnosis result.
+
+### 3. Visualizing Experiments (MLflow)
+To see technical details like model accuracy and training history:
+```bash
+mlflow ui
+```
+- Open `http://localhost:5000` in your browser.
+
+---
+
+## 🔧 Technical Details (For Developers)
+
+### Design Patterns
+This project uses solid software engineering principles:
+- **Strategy Pattern**: Used in `src/model_dev.py` to allow easy swapping of algorithms (e.g., switching from Random Forest to XGBoost without breaking the pipeline).
+- **Factory Pattern**: Used for data ingestion to handle different file formats automatically.
+
+### Configuring the Model
+You can modify the model parameters in `src/model_dev.py`. Look for:
+```python
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+```
+Change `n_estimators` or add other hyperparameters to tune performance.
+
+---
+
+## ❓ Troubleshooting
+
+**Q: The Streamlit app says "AI Brain Offline".**
+> **Fix**: You must run the training pipeline first (`python run_pipeline.py`). The app needs a trained model to make predictions.
+
+**Q: `ModuleNotFoundError`?**
+> **Fix**: Ensure your virtual environment is activated and you have installed all requirements: `pip install -r requirements.txt`.
+
+**Q: ZenML Errors?**
+> **Fix**: Try resetting the stack:
+> ```bash
+> zenml clean
+> zenml init
+> ```
+
+---
+
+## 🤝 Contributing
+Contributions are welcome! If you'd like to improve the model or add new features:
+1.  Fork the repo.
+2.  Create a feature branch.
+3.  Submit a Pull Request.
+
+---
+
+**Built with ❤️ for AI in Healthcare**
